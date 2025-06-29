@@ -1,0 +1,71 @@
+﻿@page
+@model AccountManagementSystem.Pages.ChartOfAccounts.IndexModel
+@{
+    ViewData["Title"] = "Chart of Accounts";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    <p>
+        <a asp-page="Create" class="btn btn-primary">Create New Account</a>
+    </p>
+
+    @if (Model.StatusMessage != null)
+    {
+        <div class="alert alert-info">@Model.StatusMessage</div>
+    }
+    @if (Model.ErrorMessage != null)
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <table class="table table-striped table-hover mt-3">
+        <thead>
+            <tr>
+                <th>Account Code</th>
+                <th>Account Name</th>
+                <th>Account Type</th>
+                <th>Parent Account</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                async Task RenderAccounts(List<AccountManagementSystem.Models.ChartOfAccountsViewModel> accounts)
+                {
+                    foreach (var account in accounts.OrderBy(a => a.AccountCode))
+                    {
+                        <tr class="account-level-@account.Level">
+                            <td style="padding-left: @(20 * account.Level + 15)px;">@account.AccountCode</td>
+                            <td>@account.AccountName</td>
+                            <td>@account.AccountType</td>
+                            <td>@(account.ParentAccountName ?? "N/A")</td>
+                            <td>@(account.IsActive ? "Yes" : "No")</td>
+                            <td>
+                                <a asp-page="Edit" asp-route-id="@account.AccountId" class="btn btn-sm btn-info">Edit</a>
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@account.AccountId" onsubmit="return confirm('Are you sure you want to delete this account? This action cannot be undone.');" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        if (account.Children.Any())
+                        {
+                            // Await the recursive call if the method itself is async.
+                            await RenderAccounts(account.Children);
+                        }
+                    }
+                }
+            }
+            @if (Model.Accounts.Any())
+            {
+                await RenderAccounts(Model.Accounts);
+            }
+            else
+            {
+                <tr><td colspan="6" class="text-center">No accounts found.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

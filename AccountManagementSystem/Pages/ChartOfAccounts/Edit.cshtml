@@ -1,0 +1,68 @@
+﻿@page "{id:int?}"
+@model AccountManagementSystem.Pages.ChartOfAccounts.EditModel
+@{
+    ViewData["Title"] = "Edit Account";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    @if (Model.ErrorMessage != null)
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @if (Model.StatusMessage != null)
+    {
+        <div class="alert alert-info">@Model.StatusMessage</div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Account.AccountId" />
+                <div class="form-group mb-3">
+                    <label asp-for="Account.AccountCode"></label>
+                    <input asp-for="Account.AccountCode" class="form-control" />
+                    <span asp-validation-for="Account.AccountCode" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Account.AccountName"></label>
+                    <input asp-for="Account.AccountName" class="form-control" />
+                    <span asp-validation-for="Account.AccountName" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Account.AccountType"></label>
+                    <select asp-for="Account.AccountType" class="form-control">
+                        <option value="">-- Select Account Type --</option>
+                        <option value="Asset">Asset</option>
+                        <option value="Liability">Liability</option>
+                        <option value="Equity">Equity</option>
+                        <option value="Revenue">Revenue</option>
+                        <option value="Expense">Expense</option>
+                    </select>
+                    <span asp-validation-for="Account.AccountType" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Account.ParentAccountId"></label>
+                    <select asp-for="Account.ParentAccountId" asp-items="Model.ParentAccountsSelectList" class="form-control">
+                        <option value="">-- No Parent (Top Level) --</option>
+                    </select>
+                    <span asp-validation-for="Account.ParentAccountId" class="text-danger"></span>
+                </div>
+                <div class="form-group form-check mb-3">
+                    <input class="form-check-input" asp-for="Account.IsActive" />
+                    <label class="form-check-label" asp-for="Account.IsActive"></label>
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-page="Index" class="btn btn-secondary">Back to List</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

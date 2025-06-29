@@ -1,0 +1,34 @@
+﻿@model AccountManagementSystem.Models.VoucherDetailViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    var rowIndex = ViewData["RowIndex"];
+    var accountList = ViewData["AccountList"] as SelectList;
+}
+
+<div class="row voucher-detail-row align-items-center g-2 mb-2 border-bottom pb-2">
+    <div class="col-md-3">
+        <label class="form-label">Account</label>
+        <select name="Details[@rowIndex].AccountId" class="form-control account-select" asp-for="AccountId" asp-items="accountList" required>
+            <option value="">-- Select Account --</option>
+        </select>
+        <span asp-validation-for="AccountId" class="text-danger"></span>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Debit</label>
+        <input type="number" step="0.01" min="0" name="Details[@rowIndex].DebitAmount" asp-for="DebitAmount" class="form-control debit-amount" />
+        <span asp-validation-for="DebitAmount" class="text-danger"></span>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Credit</label>
+        <input type="number" step="0.01" min="0" name="Details[@rowIndex].CreditAmount" asp-for="CreditAmount" class="form-control credit-amount" />
+        <span asp-validation-for="CreditAmount" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Narration</label>
+        <input type="text" name="Details[@rowIndex].Narration" asp-for="Narration" class="form-control" maxlength="500" />
+        <span asp-validation-for="Narration" class="text-danger"></span>
+    </div>
+    <div class="col-md-1 text-center">
+        <button type="button" class="btn btn-danger btn-sm remove-detail-row mt-4">X</button>
+    </div>
+</div>

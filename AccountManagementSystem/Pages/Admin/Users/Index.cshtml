@@ -1,0 +1,45 @@
+﻿@page
+@model AccountManagementSystem.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    <p>
+        Manage user accounts and assign roles.
+    </p>
+
+    @if (Model.StatusMessage != null)
+    {
+        <div class="alert alert-info">@Model.StatusMessage</div>
+    }
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Roles</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td>@user.Email</td>
+                    <td>
+                        @{
+                            var userRoles = string.Join(", ", Model.UserRoles[user.Id]);
+                        }
+                        @userRoles
+                    </td>
+                    <td>
+                        <a asp-page="./ManageRoles" asp-route-userId="@user.Id" class="btn btn-primary btn-sm">Manage Roles</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

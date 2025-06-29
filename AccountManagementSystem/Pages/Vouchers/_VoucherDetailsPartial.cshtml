@@ -1,0 +1,268 @@
+﻿@model AccountManagementSystem.Models.VoucherViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    var accountList = ViewData["AccountList"] as SelectList;
+}
+
+<div class="card mt-4">
+    <div class="card-header bg-light">
+        <h4>Voucher Details</h4>
+    </div>
+    <div class="card-body">
+        <div id="voucher-details-container">
+            @if (Model.Details.Any())
+            {
+                for (int i = 0; i < Model.Details.Count; i++)
+                {
+                    <div class="row voucher-detail-row align-items-center g-2 mb-2 border-bottom pb-2">
+                        <div class="col-md-3">
+                            <label class="form-label">Account</label>
+                            <select name="Details[@i].AccountId" class="form-control account-select" required>
+                                <option value="">-- Select Account --</option>
+                                @foreach (var item in accountList!)
+                                {
+                                    if (Model.Details[i].AccountId.ToString() == item.Value)
+                                    {
+                                        <option value="@item.Value" selected>@item.Text</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="Details[@i].AccountId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Debit</label>
+                            <input type="number" step="0.01" min="0" name="Details[@i].DebitAmount" class="form-control debit-amount" value="@Model.Details[i].DebitAmount.ToString("F2")" />
+                            <span asp-validation-for="Details[@i].DebitAmount" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Credit</label>
+                            <input type="number" step="0.01" min="0" name="Details[@i].CreditAmount" class="form-control credit-amount" value="@Model.Details[i].CreditAmount.ToString("F2")" />
+                            <span asp-validation-for="Details[@i].CreditAmount" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Narration</label>
+                            <input type="text" name="Details[@i].Narration" class="form-control" value="@Model.Details[i].Narration" maxlength="500" />
+                            <span asp-validation-for="Details[@i].Narration" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-1 text-center">
+                            <button type="button" class="btn btn-danger btn-sm remove-detail-row mt-4">X</button>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="row voucher-detail-row align-items-center g-2 mb-2 border-bottom pb-2">
+                    <div class="col-md-3">
+                        <label class="form-label">Account</label>
+                        <select name="Details[0].AccountId" class="form-control account-select" required>
+                            <option value="">-- Select Account --</option>
+                            @foreach (var item in accountList!)
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Debit</label>
+                        <input type="number" step="0.01" min="0" name="Details[0].DebitAmount" class="form-control debit-amount" value="0.00" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Credit</label>
+                        <input type="number" step="0.01" min="0" name="Details[0].CreditAmount" class="form-control credit-amount" value="0.00" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Narration</label>
+                        <input type="text" name="Details[0].Narration" class="form-control" maxlength="500" />
+                    </div>
+                    <div class="col-md-1 text-center">
+                        <button type="button" class="btn btn-danger btn-sm remove-detail-row mt-4">X</button>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="row mt-3">
+            <div class="col-12 text-end">
+                <button type="button" id="add-detail-row" class="btn btn-secondary btn-sm">Add Row</button>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6 offset-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label mb-0 fw-bold">Total Debit:</label>
+                    <input type="text" id="total-debit" class="form-control text-end fw-bold" value="0.00" readonly style="max-width: 150px;" />
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label mb-0 fw-bold">Total Credit:</label>
+                    <input type="text" id="total-credit" class="form-control text-end fw-bold" value="0.00" readonly style="max-width: 150px;" />
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label mb-0 fw-bold">Balance:</label>
+                    <input type="text" id="total-balance" class="form-control text-end fw-bold" value="0.00" readonly style="max-width: 150px;" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<template id="voucher-detail-row-template">
+    <div class="row voucher-detail-row align-items-center g-2 mb-2 border-bottom pb-2">
+        <div class="col-md-3">
+            <label class="form-label">Account</label>
+            <select name="Details[__idx__].AccountId" class="form-control account-select" required>
+                <option value="">-- Select Account --</option>
+                @if (accountList is SelectList al)
+                {
+                    foreach (var item in al)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Debit</label>
+            <input type="number" step="0.01" min="0" name="Details[__idx__].DebitAmount" class="form-control debit-amount" value="0.00" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Credit</label>
+            <input type="number" step="0.01" min="0" name="Details[__idx__].CreditAmount" class="form-control credit-amount" value="0.00" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Narration</label>
+            <input type="text" name="Details[__idx__].Narration" class="form-control" maxlength="500" />
+        </div>
+        <div class="col-md-1 text-center">
+            <button type="button" class="btn btn-danger btn-sm remove-detail-row mt-4">X</button>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM Content Loaded for _VoucherDetailsPartial.cshtml');
+
+            function calculateTotals() {
+                let totalDebit = 0;
+                let totalCredit = 0;
+
+                document.querySelectorAll('.voucher-detail-row').forEach(function (row) {
+                    let debitInput = row.querySelector('.debit-amount');
+                    let creditInput = row.querySelector('.credit-amount');
+
+                    let debit = parseFloat(debitInput.value) || 0;
+                    let credit = parseFloat(creditInput.value) || 0;
+
+                    totalDebit += debit;
+                    totalCredit += credit;
+                });
+
+                document.getElementById('total-debit').value = totalDebit.toFixed(2);
+                document.getElementById('total-credit').value = totalCredit.toFixed(2);
+                document.getElementById('total-balance').value = (totalDebit - totalCredit).toFixed(2);
+
+                const balanceInput = document.getElementById('total-balance');
+                if (Math.abs(totalDebit - totalCredit) > 0.001) { 
+                    balanceInput.classList.remove('is-valid');
+                    balanceInput.classList.add('is-invalid');
+                } else {
+                    balanceInput.classList.remove('is-invalid');
+                    balanceInput.classList.add('is-valid');
+                }
+            }
+
+            function applyReadonlyLogic(targetInput) {
+                const row = targetInput.closest('.voucher-detail-row');
+                if (!row) return;
+
+                const debitInput = row.querySelector('.debit-amount');
+                const creditInput = row.querySelector('.credit-amount');
+
+                const debitVal = parseFloat(debitInput.value) || 0;
+                const creditVal = parseFloat(creditInput.value) || 0;
+
+                if (debitVal > 0) {
+                    creditInput.value = '0.00';
+                    creditInput.setAttribute('readonly', 'readonly');
+                } else {
+                    creditInput.removeAttribute('readonly');
+                }
+
+                if (creditVal > 0) {
+                    debitInput.value = '0.00';
+                    debitInput.setAttribute('readonly', 'readonly');
+                } else {
+                    debitInput.removeAttribute('readonly');
+                }
+            }
+            document.querySelectorAll('.voucher-detail-row').forEach(row => {
+                const debitInput = row.querySelector('.debit-amount');
+                applyReadonlyLogic(debitInput); 
+            });
+
+            document.getElementById('voucher-details-container').addEventListener('input', function (event) {
+                if (event.target.classList.contains('debit-amount') || event.target.classList.contains('credit-amount')) {
+                    applyReadonlyLogic(event.target);
+                    calculateTotals();
+                }
+            });
+            calculateTotals();
+            document.getElementById('add-detail-row').addEventListener('click', function () {
+                console.log('Add Row button clicked!');
+                const container = document.getElementById('voucher-details-container');
+                const template = document.getElementById('voucher-detail-row-template');
+
+                if (!template) {
+                    console.error('Voucher detail row template not found!');
+                    return;
+                }
+
+                const newRowHtml = template.innerHTML;
+                console.log('Template HTML length:', newRowHtml.length); 
+
+                const currentRowCount = container.querySelectorAll('.voucher-detail-row').length;
+                console.log('Current row count before adding:', currentRowCount);
+
+                const newRowElement = document.createElement('div');
+                newRowElement.innerHTML = newRowHtml.replace(/__idx__/g, currentRowCount);
+
+                const appendedChild = newRowElement.firstElementChild;
+                if (!appendedChild) {
+                    console.error('No first element child found in new row element after innerHTML assignment.');
+                    return;
+                }
+                container.appendChild(appendedChild);
+                console.log('New row appended. New row count:', container.querySelectorAll('.voucher-detail-row').length);
+
+                const newDebitInput = appendedChild.querySelector('.debit-amount');
+                applyReadonlyLogic(newDebitInput);
+
+                calculateTotals();
+            });
+
+            document.getElementById('voucher-details-container').addEventListener('click', function (event) {
+                if (event.target.classList.contains('remove-detail-row')) {
+                    if (document.querySelectorAll('.voucher-detail-row').length > 1) {
+                        event.target.closest('.voucher-detail-row').remove();
+                        document.querySelectorAll('.voucher-detail-row').forEach((row, index) => {
+                            row.querySelectorAll('[name^="Details["]').forEach(input => {
+                                const originalName = input.getAttribute('name');
+                                const newName = originalName.replace(/Details\[\d+\]/, `Details[${index}]`);
+                                input.setAttribute('name', newName);
+                            });
+                        });
+                        calculateTotals();
+                    } else {
+                        alert('At least one detail row is required.');
+                    }
+                }
+            });
+        });
+    </script>
+}

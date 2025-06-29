@@ -1,0 +1,235 @@
+﻿@page
+@model AccountManagementSystem.Pages.Vouchers.CreateModel
+@{
+    ViewData["Title"] = "Create Voucher";
+}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h4>Create New Voucher</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" id="voucherForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group row mb-3">
+                    <label asp-for="VoucherHeader.VoucherType" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-4">
+                        <select asp-for="VoucherHeader.VoucherType" class="form-control">
+                            <option value="">-- Select Voucher Type --</option>
+                            <option value="Journal">Journal Voucher</option>
+                            <option value="Payment">Payment Voucher</option>
+                            <option value="Receipt">Receipt Voucher</option>
+                        </select>
+                        <span asp-validation-for="VoucherHeader.VoucherType" class="text-danger"></span>
+                    </div>
+
+                    <label asp-for="VoucherHeader.VoucherDate" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-4">
+                        <input asp-for="VoucherHeader.VoucherDate" type="date" class="form-control" />
+                        <span asp-validation-for="VoucherHeader.VoucherDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label asp-for="VoucherHeader.ReferenceNo" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-4">
+                        <input asp-for="VoucherHeader.ReferenceNo" class="form-control" />
+                        <span asp-validation-for="VoucherHeader.ReferenceNo" class="text-danger"></span>
+                    </div>
+
+                    <label asp-for="VoucherHeader.Narration" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-4">
+                        <input asp-for="VoucherHeader.Narration" class="form-control" />
+                        <span asp-validation-for="VoucherHeader.Narration" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <h5>Voucher Details</h5>
+                    <table class="table table-bordered" id="voucherDetailsTable">
+                        <thead>
+                            <tr>
+                                <th>Account</th>
+                                <th>Debit</th>
+                                <th>Credit</th>
+                                <th>Narration</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (var i = 0; i < Model.Details.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <select asp-for="Details[i].AccountId" class="form-control account-select">
+                                            <option value="">-- Select Account --</option>
+                                            @foreach (var account in Model.Accounts)
+                                            {
+                                                <option value="@account.AccountId">@account.AccountCode - @account.AccountName</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="Details[i].AccountId" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio"
+                                                   asp-for="Details[i].IsDebit" value="true" checked="@(Model.Details[i].IsDebit)" />
+                                            <input type="number" step="0.01" asp-for="Details[i].Amount"
+                                                   class="form-control" disabled="@(!Model.Details[i].IsDebit)" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio"
+                                                   asp-for="Details[i].IsDebit" value="false" checked="@(!Model.Details[i].IsDebit)" />
+                                            <input type="number" step="0.01" asp-for="Details[i].Amount"
+                                                   class="form-control" disabled="@(Model.Details[i].IsDebit)" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input asp-for="Details[i].Narration" class="form-control" />
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="5">
+                                    <button type="button" id="addRow" class="btn btn-success btn-sm">Add Row</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Total</th>
+                                <th id="totalDebit">0.00</th>
+                                <th id="totalCredit">0.00</th>
+                                <th colspan="2"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Save Voucher</button>
+                    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            let rowCount = @Model.Details.Count;
+                    $('#addRow').click(function() {
+                const newRow = `
+                    <tr>
+                        <td>
+                            <select name="Details[${rowCount}].AccountId" class="form-control account-select">
+                                <option value="">-- Select Account --</option>
+                                @foreach (var account in Model.Accounts)
+                                {
+                                        <option value="@account.AccountId">@account.AccountCode - @account.AccountName</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio"
+                                       name="Details[${rowCount}].IsDebit" value="true" checked />
+                                <input type="number" step="0.01" name="Details[${rowCount}].Amount"
+                                       class="form-control" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio"
+                                       name="Details[${rowCount}].IsDebit" value="false" />
+                                <input type="number" step="0.01" name="Details[${rowCount}].Amount"
+                                       class="form-control" disabled />
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" name="Details[${rowCount}].Narration" class="form-control" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>
+                        </td>
+                    </tr>
+                `;
+                $('#voucherDetailsTable tbody').append(newRow);
+                rowCount++;
+            });
+
+          
+            $(document).on('click', '.remove-row', function() {
+                $(this).closest('tr').remove();
+                calculateTotals();
+            });
+
+        
+            $(document).on('change', 'input[type="radio"][name$="IsDebit"]', function() {
+                const row = $(this).closest('tr');
+                const isDebit = $(this).val() === 'true';
+
+                row.find('td:nth-child(2) input[type="number"]').prop('disabled', !isDebit);
+                row.find('td:nth-child(3) input[type="number"]').prop('disabled', isDebit);
+
+                if (!isDebit) {
+                    row.find('td:nth-child(2) input[type="number"]').val('');
+                } else {
+                    row.find('td:nth-child(3) input[type="number"]').val('');
+                }
+
+                calculateTotals();
+            });
+
+         
+            $(document).on('input', 'input[type="number"]', function() {
+                calculateTotals();
+            });
+
+        
+            $('#voucherForm').submit(function(e) {
+                const totalDebit = parseFloat($('#totalDebit').text()) || 0;
+                const totalCredit = parseFloat($('#totalCredit').text()) || 0;
+
+                if (totalDebit !== totalCredit) {
+                    e.preventDefault();
+                    alert('Total debit and credit amounts must be equal.');
+                    return false;
+                }
+
+                return true;
+            });
+
+            function calculateTotals() {
+                let totalDebit = 0;
+                let totalCredit = 0;
+
+                $('tr').each(function() {
+                    const isDebit = $(this).find('input[type="radio"][name$="IsDebit"]:checked').val() === 'true';
+                    const amount = parseFloat($(this).find(`input[type="number"][${isDebit ? 'not' : ''}disabled]`).val()) || 0;
+
+                    if (isDebit) {
+                        totalDebit += amount;
+                    } else {
+                        totalCredit += amount;
+                    }
+                });
+
+                $('#totalDebit').text(totalDebit.toFixed(2));
+                $('#totalCredit').text(totalCredit.toFixed(2));
+            }
+        });
+    </script>
+}
