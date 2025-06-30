@@ -6,7 +6,7 @@
     <title>@ViewData["Title"] - AccountManagementSystem</title>
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/css/site.css" rel="stylesheet" />
-    <link href="~/AccountManagementSystem.styles.css" rel="stylesheet"/>
+    <link href="~/AccountManagementSystem.styles.css" rel="stylesheet" />
 </head>
 <body>
     <header>
@@ -76,22 +76,16 @@
             </div>
         </nav>
     </header>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+    
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js"></script>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - AccountManagementSystem - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js"></script>
-
-    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

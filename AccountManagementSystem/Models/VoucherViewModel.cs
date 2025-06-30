@@ -26,15 +26,13 @@ public class VoucherViewModel
     [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters.")]
     public string? Description { get; set; }
 
-    public string CreatedBy { get; set; } = string.Empty;
-
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
-
+    public string CreatedBy { get; set; } = string.Empty; 
+    public DateTime CreatedDate { get; set; } = DateTime.Now; 
     public List<VoucherDetailViewModel> Details { get; set; } = new List<VoucherDetailViewModel>();
 
+    // Calculated totals from detail view models for display and validation
     public decimal TotalDebit => Details.Sum(d => d.DebitAmount);
     public decimal TotalCredit => Details.Sum(d => d.CreditAmount);
-
     public string? StatusMessage { get; set; }
     public string? ErrorMessage { get; set; }
 }
@@ -58,7 +56,7 @@ public class VoucherDetailViewModel
 
     [Display(Name = "Credit")]
     [Range(0, 999999999999999.99, ErrorMessage = "Credit amount must be non-negative.")]
-    [DataType(DataType.Currency)]
+    [DataType(DataType.Currency)] 
     public decimal CreditAmount { get; set; }
 
     [StringLength(500, ErrorMessage = "Narration cannot exceed 500 characters.")]

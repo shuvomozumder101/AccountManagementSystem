@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+
 namespace AccountManagementSystem.Models
 {
     public class Voucher
@@ -9,17 +10,18 @@ namespace AccountManagementSystem.Models
         public string ReferenceNo { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
-        public DateTime CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public List<VoucherDetail> Details { get; set; } = new List<VoucherDetail>();
         public decimal TotalDebit => Details.Sum(d => d.DebitAmount);
         public decimal TotalCredit => Details.Sum(d => d.CreditAmount);
     }
+
     public class VoucherDetail
     {
         public int VoucherDetailId { get; set; }
         public int VoucherId { get; set; }
         public int AccountId { get; set; }
-        public string AccountCode { get; set; } = string.Empty; 
+        public string AccountCode { get; set; } = string.Empty;
         public string AccountName { get; set; } = string.Empty;
         public decimal DebitAmount { get; set; }
         public decimal CreditAmount { get; set; }
