@@ -59,12 +59,13 @@
             </form>
         </div>
     </div>
-   
-    <button class ="btn btn-Info" onclick="exportTableToExcel('VoucherDataList', 'VoucherDataList')">
-        Export to Excel</button>
-
-    <div id ="VoucherDataList" class="table-responsive">
-        <table  class="table table-bordered table-striped mt-3">
+    <div class="p-2 text-end">
+        <button class="btn btn-primary" onclick="exportTableToExcel('VoucherDataList', 'VoucherDataList')">
+            Export to Excel
+        </button>
+    </div>
+    <div id="VoucherDataList" class="table-responsive">
+        <table class="table table-bordered table-striped mt-3">
             <thead class="bg-light">
                 <tr>
                     <th>Voucher ID</th>
