@@ -15,13 +15,13 @@
                 for (int i = 0; i < Model.Details.Count; i++)
                 {
                     var rowViewData = new ViewDataDictionary(ViewData) { { "RowIndex", i } };
-                    @Html.Partial("_VoucherDetailRowPartial", Model.Details[i], rowViewData)
-                }                                                      
+                    <partial name="_VoucherDetailRowPartial" model="Model.Details[i]" view-data="rowViewData" />
+                }
             }
             else
             {
                 var rowViewData = new ViewDataDictionary(ViewData) { { "RowIndex", 0 } };
-                @Html.Partial("_VoucherDetailRowPartial", new VoucherDetailViewModel(), rowViewData)
+                <partial name="_VoucherDetailRowPartial" model="new VoucherDetailViewModel()" view-data="rowViewData" />
             }
         </div>
         <div class="row mt-3">
@@ -29,149 +29,147 @@
                 <button type="button" id="add-detail-row" class="btn btn-secondary btn-sm">Add Row</button>
             </div>
         </div>
-
-        @* Totals Section *@
         <div class="row mt-4">
             <div class="col-md-6 offset-md-6">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <label class="form-label mb-0 fw-bold">Total Debit:</label>
-                    <input type="text" id="total-debit" class="form-control text-end fw-bold" value="@Model.TotalDebit.ToString("F2")" readonly style="max-width: 150px;" />
+                    <input type="text" id="total-debit"
+                           class="form-control text-end fw-bold"
+                           value="@Model.TotalDebit.ToString("F2")"
+                           readonly style="max-width: 150px;" />
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <label class="form-label mb-0 fw-bold">Total Credit:</label>
-                    <input type="text" id="total-credit" class="form-control text-end fw-bold" value="@Model.TotalCredit.ToString("F2")" readonly style="max-width: 150px;" />
+                    <input type="text" id="total-credit"
+                           class="form-control text-end fw-bold"
+                           value="@Model.TotalCredit.ToString("F2")"
+                           readonly style="max-width: 150px;" />
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <label class="form-label mb-0 fw-bold">Balance:</label>
                     <input type="text" id="total-balance"
                            class="form-control text-end fw-bold @((Math.Abs(Model.TotalDebit - Model.TotalCredit) > 0.001m) ? "is-invalid" : "is-valid")"
-                           value="@((Model.TotalDebit - Model.TotalCredit).ToString("F2"))" readonly style="max-width: 150px;" />
+                           value="@((Model.TotalDebit - Model.TotalCredit).ToString("F2"))"
+                           readonly style="max-width: 150px;" />
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <template id="voucher-detail-row-template">
     @{
         var templateRowViewData = new ViewDataDictionary(ViewData) { { "RowIndex", "__idx__" } };
     }
-    @Html.Partial("_VoucherDetailRowPartial", new VoucherDetailViewModel(), templateRowViewData)
+    <partial name="_VoucherDetailRowPartial" model="new VoucherDetailViewModel()" view-data="templateRowViewData" />
 </template>
 
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('DOM Content Loaded for _VoucherDetailsPartial.cshtml');
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function calculateTotals() {
+            let totalDebit = 0;
+            let totalCredit = 0;
 
-            function calculateTotals() {
-                let totalDebit = 0;
-                let totalCredit = 0;
+            document.querySelectorAll('.voucher-detail-row').forEach(function (row, index) {
+                let debitInput = row.querySelector('.debit-amount');
+                let creditInput = row.querySelector('.credit-amount');
 
-                document.querySelectorAll('.voucher-detail-row').forEach(function (row) {
-                    let debitInput = row.querySelector('.debit-amount');
-                    let creditInput = row.querySelector('.credit-amount');
+                let debit = parseFloat(debitInput ? debitInput.value : '0') || 0;
+                let credit = parseFloat(creditInput ? creditInput.value : '0') || 0;
 
-                    let debit = parseFloat(debitInput ? debitInput.value : '0') || 0;
-                    let credit = parseFloat(creditInput ? creditInput.value : '0') || 0;
-
-                    totalDebit += debit;
-                    totalCredit += credit;
-                });
-
-                document.getElementById('total-debit').value = totalDebit.toFixed(2);
-                document.getElementById('total-credit').value = totalCredit.toFixed(2);
-
-                const balance = totalDebit - totalCredit;
-                document.getElementById('total-balance').value = balance.toFixed(2);
-
-                const balanceInput = document.getElementById('total-balance');
-                const tolerance = 0.001;
-                if (Math.abs(balance) > tolerance) {
-                    balanceInput.classList.remove('is-valid');
-                    balanceInput.classList.add('is-invalid');
-                } else {
-                    balanceInput.classList.remove('is-invalid');
-                    balanceInput.classList.add('is-valid');
-                }
-            }
-
-            function applyReadonlyLogic(targetInput) {
-                const row = targetInput.closest('.voucher-detail-row');
-                if (!row) return;
-
-                const debitInput = row.querySelector('.debit-amount');
-                const creditInput = row.querySelector('.credit-amount');
-
-                const debitVal = parseFloat(debitInput.value) || 0;
-                const creditVal = parseFloat(creditInput.value) || 0;
-
-                debitInput.removeAttribute('readonly');
-                creditInput.removeAttribute('readonly');
-
-                if (debitVal > 0) {
-                    creditInput.value = '0.00';
-                    creditInput.setAttribute('readonly', 'readonly');
-                }
-                else if (creditVal > 0) { 
-                    debitInput.value = '0.00';
-                    debitInput.setAttribute('readonly', 'readonly');
-                }
-            }
-
-            document.querySelectorAll('.voucher-detail-row').forEach(row => {
-                const debitInput = row.querySelector('.debit-amount');
-                applyReadonlyLogic(debitInput);
-            });
-            calculateTotals();
-
-            document.getElementById('voucher-details-container').addEventListener('input', function (event) {
-                if (event.target.classList.contains('debit-amount') || event.target.classList.contains('credit-amount')) {
-                    applyReadonlyLogic(event.target);
-                    calculateTotals();
-                }
+                totalDebit += debit;
+                totalCredit += credit;
             });
 
-            document.getElementById('add-detail-row').addEventListener('click', function () {
-                const container = document.getElementById('voucher-details-container');
-                const template = document.getElementById('voucher-detail-row-template');
+            document.getElementById('total-debit').value = totalDebit.toFixed(2);
+            document.getElementById('total-credit').value = totalCredit.toFixed(2);
 
-                if (!template) {
-                    console.error('Voucher detail row template not found!');
-                    return;
-                }
+            const balance = totalDebit - totalCredit;
+            document.getElementById('total-balance').value = balance.toFixed(2);
 
-                const newRowHtml = template.innerHTML;
-                const currentRowCount = container.querySelectorAll('.voucher-detail-row').length;
+            const balanceInput = document.getElementById('total-balance');
+            const tolerance = 0.001;
+            if (Math.abs(balance) > tolerance) {
+                balanceInput.classList.remove('is-valid');
+                balanceInput.classList.add('is-invalid');
+            } else {
+                balanceInput.classList.remove('is-invalid');
+                balanceInput.classList.add('is-valid');
+            }
+        }
+        function applyReadonlyLogic(targetInput) {
+            const row = targetInput.closest('.voucher-detail-row');
+            if (!row) return;
 
-                const newRowElement = document.createElement('div');
-                newRowElement.innerHTML = newRowHtml.replace(/__idx__/g, currentRowCount);
+            const debitInput = row.querySelector('.debit-amount');
+            const creditInput = row.querySelector('.credit-amount');
 
-                const appendedChild = newRowElement.firstElementChild;
-                if (!appendedChild) {
-                    console.error('No first element child found in new row element after innerHTML assignment.');
-                    return;
-                }
-                container.appendChild(appendedChild);
+            const debitVal = parseFloat(debitInput.value) || 0;
+            const creditVal = parseFloat(creditInput.value) || 0;
 
-                const newDebitInput = appendedChild.querySelector('.debit-amount');
-                applyReadonlyLogic(newDebitInput);
+            debitInput.removeAttribute('readonly');
+            creditInput.removeAttribute('readonly');
 
+            if (debitVal > 0) {
+                creditInput.value = '0.00';
+                creditInput.setAttribute('readonly', 'readonly');
+            } else if (creditVal > 0) {
+                debitInput.value = '0.00';
+                debitInput.setAttribute('readonly', 'readonly');
+            }
+        }
+
+        document.querySelectorAll('.voucher-detail-row').forEach(row => {
+            const debitInput = row.querySelector('.debit-amount');
+            applyReadonlyLogic(debitInput);
+        });
+        calculateTotals();
+        document.getElementById('voucher-details-container').addEventListener('input', function (event) {
+            if (event.target.classList.contains('debit-amount') || event.target.classList.contains('credit-amount')) {
+                applyReadonlyLogic(event.target);
                 calculateTotals();
-                var form = document.querySelector('form');
-                if (form && typeof $.validator !== 'undefined' && typeof $.validator.unobtrusive !== 'undefined') {
-                    $.validator.unobtrusive.parse(form);
-                }
-            });
+            }
+        });
+        document.getElementById('add-detail-row').addEventListener('click', function () {
+            const container = document.getElementById('voucher-details-container');
+            const template = document.getElementById('voucher-detail-row-template');
 
-            document.getElementById('voucher-details-container').addEventListener('click', function (event) {
-                if (event.target.classList.contains('remove-detail-row')) {
-                    const allDetailRows = document.querySelectorAll('.voucher-detail-row');
-                    if (allDetailRows.length > 1) { 
-                        event.target.closest('.voucher-detail-row').remove();
+            if (!template) {
+                console.error('Voucher detail row template not found!');
+                return;
+            }
 
-                        document.querySelectorAll('.voucher-detail-row').forEach((row, index) => {
-                            row.querySelectorAll('[name^="Details["]').forEach(input => {
-                                const originalName = input.getAttribute('name');
+            const newRowHtml = template.innerHTML;
+            const currentRowCount = container.querySelectorAll('.voucher-detail-row').length;
+
+            const newRowElement = document.createElement('div');
+            newRowElement.innerHTML = newRowHtml.replace(/__idx__/g, currentRowCount);
+
+            const appendedChild = newRowElement.firstElementChild;
+            if (!appendedChild) {
+                console.error('No first element child found in new row element after innerHTML assignment.');
+                return;
+            }
+            container.appendChild(appendedChild);
+
+            const newDebitInput = appendedChild.querySelector('.debit-amount');
+            applyReadonlyLogic(newDebitInput);
+
+            calculateTotals();
+            var form = document.querySelector('form');
+            if (form && typeof $.validator !== 'undefined' && typeof $.validator.unobtrusive !== 'undefined') {
+                $.validator.unobtrusive.parse(form);
+            }
+        });
+        document.getElementById('voucher-details-container').addEventListener('click', function (event) {
+            if (event.target.classList.contains('remove-detail-row')) {
+                const allDetailRows = document.querySelectorAll('.voucher-detail-row');
+                if (allDetailRows.length > 1) {
+                    event.target.closest('.voucher-detail-row').remove();
+                    document.querySelectorAll('.voucher-detail-row').forEach((row, index) => {
+                        row.querySelectorAll('[name^="Details["]').forEach(input => {
+                            const originalName = input.getAttribute('name');
+                            if (originalName && originalName.match(/Details\[\d+\]/)) {
                                 const newName = originalName.replace(/Details\[\d+\]/, `Details[${index}]`);
                                 input.setAttribute('name', newName);
 
@@ -180,19 +178,19 @@
                                     validationSpan.setAttribute('data-valmsg-for', newName);
                                     validationSpan.textContent = '';
                                 }
-                            });
-                             var form = document.querySelector('form');
-                            if (form && typeof $.validator !== 'undefined' && typeof $.validator.unobtrusive !== 'undefined') {
-                                $.validator.unobtrusive.parse(form);
                             }
                         });
+                        var form = document.querySelector('form');
+                        if (form && typeof $.validator !== 'undefined' && typeof $.validator.unobtrusive !== 'undefined') {
+                            $.validator.unobtrusive.parse(form);
+                        }
+                    });
 
-                        calculateTotals();
-                    } else {
-                        alert('At least one detail row is required.');
-                    }
+                    calculateTotals();
+                } else {
+                    alert('At least one detail row is required.');
                 }
-            });
+            }
         });
-    </script>
-}
+    });
+</script>
