@@ -59,9 +59,12 @@
             </form>
         </div>
     </div>
+   
+    <button class ="btn btn-Info" onclick="exportTableToExcel('VoucherDataList', 'VoucherDataList')">
+        Export to Excel</button>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped mt-3">
+    <div id ="VoucherDataList" class="table-responsive">
+        <table  class="table table-bordered table-striped mt-3">
             <thead class="bg-light">
                 <tr>
                     <th>Voucher ID</th>
@@ -102,8 +105,7 @@
                             </td>
                             <td>@voucher.CreatedBy</td>
                             <td>
-                                @* For now, a simple View link. You can add Edit/Delete pages later. *@
-                                <a asp-page="./Details" asp-route-id="@voucher.VoucherId" class="btn btn-info btn-sm">View</a>
+                                <a asp-page="Delete" asp-route-id="@voucher.VoucherId" class="btn btn-danger btn-sm">Delete</a>
                             </td>
                         </tr>
                     }
@@ -112,9 +114,32 @@
         </table>
     </div>
 </div>
-
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        function exportTableToExcel(tableID, filename = ''){
+            var downloadLink;
+            var dataType = 'application/vnd.ms-excel';
+            var tableSelect = document.getElementById(tableID);
+            var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
+            filename = filename?filename+'.xls':'excel_data.xls';
+            downloadLink = document.createElement("a");
+
+            document.body.appendChild(downloadLink);
+
+            if(navigator.msSaveOrOpenBlob){
+                var blob = new Blob(['\ufeff', tableHTML], {
+                    type: dataType
+                });
+                navigator.msSaveOrOpenBlob( blob, filename);
+            }else{
+                downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+                downloadLink.download = filename;
+                downloadLink.click();
+            }
+        }
+    </script>
 }

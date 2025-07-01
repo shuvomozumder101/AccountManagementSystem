@@ -56,13 +56,12 @@ public class VoucherDAL
                     }
                     else
                     {
-                                              Console.WriteLine("Stored procedure did not return a VoucherId. This indicates a potential issue in the SP.");
+                        Console.WriteLine("Stored procedure did not return a VoucherId. This indicates a potential issue in the SP.");
                         outputVoucherId = -1;
                     }
                 }
                 catch (SqlException ex)
                 {
-                    // Check for custom errors raised by THROW in SQL Server (Error number >= 50000)
                     if (ex.Number >= 50000)
                     {
                         throw new InvalidOperationException(ex.Message, ex);
@@ -89,62 +88,47 @@ public class VoucherDAL
             using (SqlCommand cmd = new SqlCommand("sp_GetVouchers", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@VoucherId", voucherId.HasValue ? (object)voucherId.Value : DBNull.Value);
-                cmd.Parameters.AddWithValue("@VoucherType", voucherType ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@StartDate", startDate.HasValue ? (object)startDate.Value : DBNull.Value);
-                cmd.Parameters.AddWithValue("@EndDate", endDate.HasValue ? (object)endDate.Value : DBNull.Value);
-
-                try
+                conn.Open();
+                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    conn.Open();
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    Dictionary<int, Voucher> voucherMap = new Dictionary<int, Voucher>();
+
+                    while (reader.Read())
                     {
-                        Dictionary<int, Voucher> voucherMap = new Dictionary<int, Voucher>();
+                        int currentVoucherId = reader.GetInt32(reader.GetOrdinal("VoucherId"));
 
-                        while (reader.Read())
+                        if (!voucherMap.ContainsKey(currentVoucherId))
                         {
-                            int currentVoucherId = reader.GetInt32(reader.GetOrdinal("VoucherId"));
-
-                            if (!voucherMap.ContainsKey(currentVoucherId))
+                            voucherMap[currentVoucherId] = new Voucher
                             {
-                                voucherMap[currentVoucherId] = new Voucher
-                                {
-                                    VoucherId = currentVoucherId,
-                                    VoucherType = reader.GetString(reader.GetOrdinal("VoucherType")),
-                                    VoucherDate = reader.GetDateTime(reader.GetOrdinal("VoucherDate")),
-                                    ReferenceNo = reader.GetString(reader.GetOrdinal("ReferenceNo")),
-                                    Description = reader.IsDBNull(reader.GetOrdinal("Description")) ? null : reader.GetString(reader.GetOrdinal("Description")),
-                                    CreatedBy = reader.GetString(reader.GetOrdinal("CreatedBy")),
-                                    CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")),
-                                    Details = new List<VoucherDetail>()
-                                };
-                                vouchers.Add(voucherMap[currentVoucherId]);
-                            }
-                            if (!reader.IsDBNull(reader.GetOrdinal("VoucherDetailId"))) 
+                                VoucherId = currentVoucherId,
+                                VoucherType = reader.GetString(reader.GetOrdinal("VoucherType")),
+                                VoucherDate = reader.GetDateTime(reader.GetOrdinal("VoucherDate")),
+                                ReferenceNo = reader.GetString(reader.GetOrdinal("ReferenceNo")),
+                                Description = reader.IsDBNull(reader.GetOrdinal("Description")) ? null : reader.GetString(reader.GetOrdinal("Description")),
+                                CreatedBy = reader.GetString(reader.GetOrdinal("CreatedBy")),
+                                CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")),
+                                Details = new List<VoucherDetail>()
+                            };
+                            vouchers.Add(voucherMap[currentVoucherId]);
+                        }
+                        if (!reader.IsDBNull(reader.GetOrdinal("VoucherDetailId")))
+                        {
+                            voucherMap[currentVoucherId].Details.Add(new VoucherDetail
                             {
-                                voucherMap[currentVoucherId].Details.Add(new VoucherDetail
-                                {
-                                    VoucherDetailId = reader.GetInt32(reader.GetOrdinal("VoucherDetailId")),
-                                    VoucherId = currentVoucherId,
-                                    AccountId = reader.GetInt32(reader.GetOrdinal("AccountId")),
-                                    AccountCode = reader.GetString(reader.GetOrdinal("AccountCode")),
-                                    AccountName = reader.GetString(reader.GetOrdinal("AccountName")),
-                                    DebitAmount = reader.GetDecimal(reader.GetOrdinal("DebitAmount")),
-                                    CreditAmount = reader.GetDecimal(reader.GetOrdinal("CreditAmount")),
-                                    Narration = reader.IsDBNull(reader.GetOrdinal("Narration")) ? null : reader.GetString(reader.GetOrdinal("Narration"))
-                                });
-                            }
+                                VoucherDetailId = reader.GetInt32(reader.GetOrdinal("VoucherDetailId")),
+                                VoucherId = currentVoucherId,
+                                AccountId = reader.GetInt32(reader.GetOrdinal("AccountId")),
+                                AccountCode = reader.GetString(reader.GetOrdinal("AccountCode")),
+                                AccountName = reader.GetString(reader.GetOrdinal("AccountName")),
+                                DebitAmount = reader.GetDecimal(reader.GetOrdinal("DebitAmount")),
+                                CreditAmount = reader.GetDecimal(reader.GetOrdinal("CreditAmount")),
+                                Narration = reader.IsDBNull(reader.GetOrdinal("Narration")) ? null : reader.GetString(reader.GetOrdinal("Narration"))
+                            });
                         }
                     }
                 }
-                catch (SqlException ex)
-                {
-                    throw new Exception($"Database operation failed while fetching vouchers: {ex.Message}", ex);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"An unexpected error occurred while fetching vouchers: {ex.Message}", ex);
-                }
+
             }
         }
         return vouchers;
