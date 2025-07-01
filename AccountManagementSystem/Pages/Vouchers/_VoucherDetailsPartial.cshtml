@@ -29,6 +29,7 @@
                 <button type="button" id="add-detail-row" class="btn btn-secondary btn-sm">Add Row</button>
             </div>
         </div>
+
         <div class="row mt-4">
             <div class="col-md-6 offset-md-6">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -97,6 +98,7 @@
                 balanceInput.classList.add('is-valid');
             }
         }
+
         function applyReadonlyLogic(targetInput) {
             const row = targetInput.closest('.voucher-detail-row');
             if (!row) return;
@@ -124,12 +126,14 @@
             applyReadonlyLogic(debitInput);
         });
         calculateTotals();
+
         document.getElementById('voucher-details-container').addEventListener('input', function (event) {
             if (event.target.classList.contains('debit-amount') || event.target.classList.contains('credit-amount')) {
                 applyReadonlyLogic(event.target);
                 calculateTotals();
             }
         });
+
         document.getElementById('add-detail-row').addEventListener('click', function () {
             const container = document.getElementById('voucher-details-container');
             const template = document.getElementById('voucher-detail-row-template');
@@ -156,16 +160,19 @@
             applyReadonlyLogic(newDebitInput);
 
             calculateTotals();
+
             var form = document.querySelector('form');
             if (form && typeof $.validator !== 'undefined' && typeof $.validator.unobtrusive !== 'undefined') {
                 $.validator.unobtrusive.parse(form);
             }
         });
+
         document.getElementById('voucher-details-container').addEventListener('click', function (event) {
             if (event.target.classList.contains('remove-detail-row')) {
                 const allDetailRows = document.querySelectorAll('.voucher-detail-row');
                 if (allDetailRows.length > 1) {
                     event.target.closest('.voucher-detail-row').remove();
+
                     document.querySelectorAll('.voucher-detail-row').forEach((row, index) => {
                         row.querySelectorAll('[name^="Details["]').forEach(input => {
                             const originalName = input.getAttribute('name');

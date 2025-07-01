@@ -31,10 +31,8 @@ namespace AccountManagementSystem.Pages.Vouchers
         public IActionResult OnGet()
         {
             Voucher.VoucherType = "Journal";
-
             if (!Voucher.Details.Any())
                 Voucher.Details.Add(new VoucherDetailViewModel());
-
             LoadAccountsDropdown();
             return Page();
         }
@@ -42,20 +40,6 @@ namespace AccountManagementSystem.Pages.Vouchers
         public IActionResult OnPost()
         {
             Voucher.VoucherType = "Journal";
-
-            if (!ModelState.IsValid)
-            {
-                LoadAccountsDropdown();
-                return Page();
-            }
-
-            if (!IsValidVoucher(Voucher, out string validationError))
-            {
-                ModelState.AddModelError(string.Empty, validationError);
-                LoadAccountsDropdown();
-                return Page();
-            }
-
             Voucher.CreatedBy = User.Identity?.Name ?? "System";
             Voucher.CreatedDate = DateTime.Now;
 
@@ -63,7 +47,6 @@ namespace AccountManagementSystem.Pages.Vouchers
             {
                 var newVoucher = MapToEntity(Voucher);
                 int voucherId = _voucherDAL.SaveVoucher(newVoucher);
-
                 StatusMessage = $"Journal Voucher '{Voucher.ReferenceNo}' created successfully with ID: {voucherId}.";
                 return RedirectToPage("./Index");
             }
@@ -78,58 +61,26 @@ namespace AccountManagementSystem.Pages.Vouchers
         private void LoadAccountsDropdown()
         {
             var accounts = _chartOfAccountsDAL.GetAccountsForDropdown();
-            AccountsSelectList = new SelectList(accounts.Select(a => new SelectListItem
-            {
-                Value = a.AccountId.ToString(),
-                Text = $"{a.AccountCode} - {a.AccountName}"
-            }), "Value", "Text");
+            AccountsSelectList = new SelectList(
+                accounts.Select(a => new SelectListItem
+                {
+                    Value = a.AccountId.ToString(),
+                    Text = $"{a.AccountCode} - {a.AccountName}"
+                }),
+                "Value", "Text");
         }
 
-        private bool IsValidVoucher(VoucherViewModel voucher, out string error)
-        {
-            error = string.Empty;
-
-            if (voucher.TotalDebit <= 0 || voucher.TotalCredit <= 0)
-            {
-                error = "Voucher must have a positive total debit and credit.";
-                return false;
-            }
-
-            if (Math.Abs(voucher.TotalDebit - voucher.TotalCredit) > 0.001m)
-            {
-                error = "Total Debit must equal Total Credit.";
-                return false;
-            }
-
-            foreach (var detail in voucher.Details)
-            {
-                if (detail.DebitAmount > 0 && detail.CreditAmount > 0)
-                {
-                    error = "A detail row cannot have both debit and credit amounts.";
-                    return false;
-                }
-
-                if (detail.DebitAmount == 0 && detail.CreditAmount == 0)
-                {
-                    error = "Each detail row must have either a debit or credit amount.";
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private Voucher MapToEntity(VoucherViewModel Model)
+        private Voucher MapToEntity(VoucherViewModel model)
         {
             return new Voucher
             {
-                VoucherType = Model.VoucherType,
-                VoucherDate = Model.VoucherDate,
-                ReferenceNo = Model.ReferenceNo,
-                Description = Model.Description,
-                CreatedBy = Model.CreatedBy,
-                CreatedDate = Model.CreatedDate,
-                Details = Model.Details.Select(d => new AccountManagementSystem.Models.VoucherDetail
+                VoucherType = model.VoucherType,
+                VoucherDate = model.VoucherDate,
+                ReferenceNo = model.ReferenceNo,
+                Description = model.Description,
+                CreatedBy = model.CreatedBy,
+                CreatedDate = model.CreatedDate,
+                Details = model.Details.Select(d => new AccountManagementSystem.Models.VoucherDetail
                 {
                     AccountId = d.AccountId,
                     DebitAmount = d.DebitAmount,

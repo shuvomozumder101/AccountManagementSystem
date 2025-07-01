@@ -33,73 +33,36 @@ public class CreatePaymentModel : PageModel
     public IActionResult OnGet()
     {
         Voucher.VoucherType = "Payment";
-        Voucher.Details.Add(new VoucherDetailViewModel());
-        PopulateAccountsDropdown();
+
+        if (!Voucher.Details.Any())
+            Voucher.Details.Add(new VoucherDetailViewModel());
+
+        LoadAccountsDropdown();
         return Page();
     }
 
     public IActionResult OnPost()
     {
         Voucher.VoucherType = "Payment";
-
-        if (!ModelState.IsValid)
-        {
-            PopulateAccountsDropdown();
-            return Page();
-        }
-
-        if (Math.Abs(Voucher.TotalDebit - Voucher.TotalCredit) > 0.001m)
-        {
-            ModelState.AddModelError(string.Empty, "Total Debit must equal Total Credit for the voucher.");
-            PopulateAccountsDropdown();
-            return Page();
-        }
-
-        if (Voucher.TotalDebit <= 0 || Voucher.TotalCredit <= 0)
-        {
-            ModelState.AddModelError(string.Empty, "Voucher must have a positive total debit and a positive total credit.");
-            PopulateAccountsDropdown();
-            return Page();
-        }
-
-        Voucher.CreatedBy = User.Identity?.Name ?? "Unknown";
+        Voucher.CreatedBy = User.Identity?.Name ?? "System";
+        Voucher.CreatedDate = DateTime.Now;
 
         try
         {
-            var dalVoucher = new Models.Voucher
-            {
-                VoucherType = Voucher.VoucherType,
-                VoucherDate = Voucher.VoucherDate,
-                ReferenceNo = Voucher.ReferenceNo,
-                Description = Voucher.Description,
-                CreatedBy = Voucher.CreatedBy,
-                Details = Voucher.Details.Select(d => new Models.VoucherDetail
-                {
-                    AccountId = d.AccountId,
-                    DebitAmount = d.DebitAmount,
-                    CreditAmount = d.CreditAmount,
-                    Narration = d.Narration
-                }).ToList()
-            };
-
-            int newVoucherId = _voucherDAL.SaveVoucher(dalVoucher);
-            StatusMessage = $"Payment Voucher '{Voucher.ReferenceNo}' created successfully with ID: {newVoucherId}.";
+            var newVoucher = MapToEntity(Voucher);
+            int voucherId = _voucherDAL.SaveVoucher(newVoucher);
+            StatusMessage = $"Payment Voucher '{Voucher.ReferenceNo}' created successfully with ID: {voucherId}.";
             return RedirectToPage("./Index");
-        }
-        catch (InvalidOperationException ex)
-        {
-            ErrorMessage = $"Error saving voucher: {ex.Message}";
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"An unexpected error occurred: {ex.Message}";
+            ErrorMessage = $"An error occurred while saving the voucher: {ex.Message}";
+            LoadAccountsDropdown();
+            return Page();
         }
-
-        PopulateAccountsDropdown();
-        return Page();
     }
 
-    private void PopulateAccountsDropdown()
+    private void LoadAccountsDropdown()
     {
         var accounts = _chartOfAccountsDAL.GetAccountsForDropdown();
         AccountsSelectList = new SelectList(
@@ -107,7 +70,27 @@ public class CreatePaymentModel : PageModel
             {
                 Value = a.AccountId.ToString(),
                 Text = $"{a.AccountCode} - {a.AccountName}"
-            }).ToList(),
+            }),
             "Value", "Text");
+    }
+
+    private Voucher MapToEntity(VoucherViewModel model)
+    {
+        return new Voucher
+        {
+            VoucherType = model.VoucherType,
+            VoucherDate = model.VoucherDate,
+            ReferenceNo = model.ReferenceNo,
+            Description = model.Description,
+            CreatedBy = model.CreatedBy,
+            CreatedDate = model.CreatedDate,
+            Details = model.Details.Select(d => new AccountManagementSystem.Models.VoucherDetail
+            {
+                AccountId = d.AccountId,
+                DebitAmount = d.DebitAmount,
+                CreditAmount = d.CreditAmount,
+                Narration = d.Narration ?? string.Empty
+            }).ToList()
+        };
     }
 }

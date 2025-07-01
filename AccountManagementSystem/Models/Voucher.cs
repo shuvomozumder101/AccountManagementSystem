@@ -20,11 +20,13 @@ namespace AccountManagementSystem.Models
     {
         public int VoucherDetailId { get; set; }
         public int VoucherId { get; set; }
+        public Voucher Voucher { get; set; }
         public int AccountId { get; set; }
         public string AccountCode { get; set; } = string.Empty;
         public string AccountName { get; set; } = string.Empty;
         public decimal DebitAmount { get; set; }
         public decimal CreditAmount { get; set; }
+
         public string? Narration { get; set; }
     }
 }

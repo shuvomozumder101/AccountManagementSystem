@@ -1,122 +1,68 @@
-using AccountManagementSystem.DataAccess;
-using AccountManagementSystem.Models;
-using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+using AccountManagementSystem.DataAccess;
+using AccountManagementSystem.Models;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace AccountManagementSystem.Pages.Vouchers;
-
-[Authorize(Roles = "Admin,Accountant,Viewer")]
-public class IndexModel : PageModel
+namespace AccountManagementSystem.Pages.Vouchers
 {
-    private readonly VoucherDAL _voucherDAL;
-
-    public IndexModel(VoucherDAL voucherDAL)
+    public class IndexModel : PageModel
     {
-        _voucherDAL = voucherDAL;
-    }
+        private readonly VoucherDAL _voucherDAL;
 
-    public List<VoucherViewModel> Vouchers { get; set; } = new List<VoucherViewModel>();
-
-    [BindProperty(SupportsGet = true)]
-    public string? FilterVoucherType { get; set; }
-
-    [BindProperty(SupportsGet = true)]
-    [DataType(DataType.Date)]
-    public DateTime? StartDate { get; set; }
-
-    [BindProperty(SupportsGet = true)]
-    [DataType(DataType.Date)]
-    public DateTime? EndDate { get; set; }
-
-    [TempData]
-    public string? StatusMessage { get; set; }
-    [TempData]
-    public string? ErrorMessage { get; set; }
-
-    public void OnGet()
-    {
-        LoadVouchers();
-    }
-
-    public void OnGetFilter()
-    {
-        LoadVouchers();
-    }
-    public JsonResult OnGetVoucherDetails(int id)
-    {
-        try
+        public IndexModel(VoucherDAL voucherDAL)
         {
-            var voucher = _voucherDAL.GetVouchers(id, null, null, null).FirstOrDefault();
-            if (voucher == null)
+            _voucherDAL = voucherDAL;
+        }
+
+        public List<Voucher> Vouchers { get; set; } = new List<Voucher>();
+
+        [TempData]
+        public string? StatusMessage { get; set; }
+
+        [TempData]
+        public string? ErrorMessage { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterVoucherId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterVoucherType { get; set; } = "Journal";
+
+        [BindProperty(SupportsGet = true)]
+        public DateTime? FilterStartDate { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public DateTime? FilterEndDate { get; set; }
+
+        public List<string> VoucherTypes { get; set; } = new List<string> { "Journal", "Payment", "Receipt", "All" };
+
+        public IActionResult OnGet()
+        {
+            try
             {
-                return new JsonResult(new { success = false, message = "Voucher not found." }) { StatusCode = 404 };
+                string? typeToFetch = FilterVoucherType == "All" ? null : FilterVoucherType;
+
+                Vouchers = _voucherDAL.GetVouchers(
+                    voucherId: FilterVoucherId,
+                    voucherType: typeToFetch,
+                    startDate: FilterStartDate,
+                    endDate: FilterEndDate
+                );
             }
-            var voucherViewModel = new VoucherViewModel
+            catch (Exception ex)
             {
-                VoucherId = voucher.VoucherId,
-                VoucherType = voucher.VoucherType,
-                VoucherDate = voucher.VoucherDate,
-                ReferenceNo = voucher.ReferenceNo,
-                Description = voucher.Description,
-                CreatedBy = voucher.CreatedBy,
-                CreatedDate = voucher.CreatedDate,
-                Details = voucher.Details.Select(d => new VoucherDetailViewModel
-                {
-                    VoucherDetailId = d.VoucherDetailId,
-                    AccountId = d.AccountId,
-                    AccountCode = d.AccountCode,
-                    AccountName = d.AccountName,
-                    DebitAmount = d.DebitAmount,
-                    CreditAmount = d.CreditAmount,
-                    Narration = d.Narration
-                }).ToList()
-            };
+                ErrorMessage = $"Error loading vouchers: {ex.Message}";
+            }
 
-            return new JsonResult(voucherViewModel);
+            return Page();
         }
-        catch (Exception ex)
-        {
-            return new JsonResult(new { success = false, message = $"Error loading voucher details: {ex.Message}" }) { StatusCode = 500 };
-        }
-    }
 
-    private void LoadVouchers()
-    {
-        try
+        public IActionResult OnPost()
         {
-            Vouchers = _voucherDAL.GetVouchers(
-                voucherId: null,
-                voucherType: FilterVoucherType,
-                startDate: StartDate,
-                endDate: EndDate
-            ).Select(v => new VoucherViewModel
-            {
-                VoucherId = v.VoucherId,
-                VoucherType = v.VoucherType,
-                VoucherDate = v.VoucherDate,
-                ReferenceNo = v.ReferenceNo,
-                Description = v.Description,
-                CreatedBy = v.CreatedBy,
-                CreatedDate = v.CreatedDate,
-                Details = v.Details.Select(d => new VoucherDetailViewModel
-                {
-                    AccountId = d.AccountId,
-                    AccountCode = d.AccountCode,
-                    AccountName = d.AccountName,
-                    DebitAmount = d.DebitAmount,
-                    CreditAmount = d.CreditAmount,
-                    Narration = d.Narration
-                }).ToList()
-            }).ToList();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Error loading vouchers: {ex.Message}";
+            return OnGet();
         }
     }
 }
